@@ -4,6 +4,8 @@ import org.springframework.web.bind.annotation.RestController;
 
 import com.pluralsight.orderservice.client.CoffeeClient;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
 import io.github.resilience4j.circuitbreaker.annotation.CircuitBreaker;
 import org.springframework.cloud.context.config.annotation.RefreshScope;
@@ -16,8 +18,13 @@ import org.springframework.web.bind.annotation.GetMapping;
 public class OrderController {
   private final CoffeeClient coffeeClient;
 
-  @Value("${order.default-message}")
-  private String defaultOrderMessage;
+  private static final Logger log = LoggerFactory.getLogger(OrderController.class);
+
+  @Value("${SERVER_PORT}")
+  private String port;
+
+  // @Value("${order.default-message}")
+  // private String defaultOrderMessage;
 
   public OrderController(CoffeeClient coffeeClient) {
     this.coffeeClient = coffeeClient;
@@ -26,6 +33,7 @@ public class OrderController {
   @CircuitBreaker(name = "coffeeBreaker", fallbackMethod = "fallbackCoffeeMessage")
   @GetMapping(value = "/order", produces = MediaType.TEXT_HTML_VALUE)
   public String placeOrder() {
+    log.info("Place order called on port " + port);
     String coffee = coffeeClient.getCoffeeMessage();
     if (coffee == null) {
       coffee = "Unknown Coffee";

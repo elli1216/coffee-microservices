@@ -5,6 +5,7 @@ import org.springframework.web.bind.annotation.RestController;
 import com.pluralsight.orderservice.client.CoffeeClient;
 
 import org.springframework.beans.factory.annotation.Value;
+import io.github.resilience4j.circuitbreaker.annotation.CircuitBreaker;
 import org.springframework.cloud.context.config.annotation.RefreshScope;
 import org.springframework.http.MediaType;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -22,6 +23,7 @@ public class OrderController {
     this.coffeeClient = coffeeClient;
   }
 
+  @CircuitBreaker(name = "coffeeBreaker", fallbackMethod = "fallbackCoffeeMessage")
   @GetMapping(value = "/order", produces = MediaType.TEXT_HTML_VALUE)
   public String placeOrder() {
     String coffee = coffeeClient.getCoffeeMessage();
@@ -106,6 +108,10 @@ public class OrderController {
             </html>
             """,
         coffeeIconSvg, coffee);
+  }
+
+  public String fallbackCoffeeMessage(Throwable t) {
+    return "Error on order controller";
   }
 
 }
